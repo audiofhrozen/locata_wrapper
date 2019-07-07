@@ -130,7 +130,43 @@ def LoadLocataData(this_array, args, log, is_dev=True):
     return audio_array, audio_source, position_array, position_source, required_time
 
 def GetLocataTruth(this_array, position_array, position_source, required_time, is_dev):
-    return None
+    """GetLocataTruth
+
+    creates Namespace containing OptiTrac ground truth data for and relative to the specified array
+
+    Inputs:
+        array_name:       String containing array name: 'eigenmike', 'dicit', 'benchmark2', 'dummy'
+        position_array:   Structure containing array position data
+        position_source:  Structure containing source position data
+        required_time:    Vector of timestamps at which ground truth is required
+        is_dev:           If 0, the evaluation database is considered and the
+                          development database otherwise.
+
+    Outputs:
+        truth:            Namespace containing ground truth data
+                          Positional information about the sound sources are
+                          only returned for the development datbase
+                          (is_dev = 1).
+    """
+    truth = Namespace()
+
+    # Specified array
+    truth.array = position_array.data[this_array]
+    for field in truth.array.__dict__:
+        _new_values = getattr(truth.array, field)[:, required_time.valid_flag]
+        setattr(truth.array, field, _new_values)
+
+    # Source
+    if is_dev:
+        frames = np.sum(required_time.valid_flag)
+
+        truth.source = position_source.data
+        # All sources for this recording
+
+        src_names = [x for x in truth.source]
+        print(src_names)
+
+    return truth
 
 def LoadDCASEData(this_array, args, log, is_dev=True):
     pass
