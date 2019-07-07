@@ -116,3 +116,8 @@ dmypy.json
 # customs
 exp/
 results/
+*.done
+
+miniconda.sh
+local/run.pl
+local/parse_options.sh

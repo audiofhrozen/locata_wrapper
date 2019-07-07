@@ -6,7 +6,7 @@ call "cmd.bat"
 set VERBOSE=INFO
 set PROCESS=1
 
-set CONFIG_FILE=conf\default_locata_dev.yaml
+set CONFIG_FILE=conf\default_win_locata_dev.yaml
 
 rem Argument parser routine
 :loop

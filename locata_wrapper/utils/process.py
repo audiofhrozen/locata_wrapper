@@ -1,17 +1,28 @@
 # -*- coding: utf-8 -*-
+from argparse import Namespace
 import glob
+import numpy as np
 import os
 
 from locata_wrapper.utils.load_data import LoadLocataData
+from locata_wrapper.utils.load_data import GetLocataTruth
+
+
+def ElapsedTime(time_array):
+    n_steps = time_array.shape[0]
+    elapsed_time = np.zeros([n_steps])
+    for i in range (1, n_steps):
+        elapsed_time[i] = (time_array[i] - time_array[i - 1]).total_seconds()
+    return np.cumsum(elapsed_time)
 
 
 def ProcessTaskLocata(this_task, algorithm, opts, args, log):
     task_dir = os.path.join(args.data_dir, 'task{}'.format(this_task))
 
     # Create directory for this task in results directory:
-    results_task_dir = os.path.join(args.results_dir,
-                                    'task{}'.format(this_task))
-    os.makedirs(results_task_dir, exist_ok=True)
+    # results_task_dir = os.path.join(args.results_dir,
+    #                                 'task{}'.format(this_task))
+    # os.makedirs(results_task_dir, exist_ok=True)
 
     # Read all recording IDs available for this task:
     recordings = glob.glob(os.path.join(task_dir, '*'))
@@ -21,22 +32,50 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
         recording_id = int(this_recording.split('recording')[1])
 
         # Create directory for this recording in results directory:
-        rec_dir = this_recording.replace(args.data_dir, args.results_dir)
-        os.makedirs(rec_dir, exist_ok=True)
+        # rec_dir = this_recording.replace(args.data_dir, args.results_dir)
+        # os.makedirs(rec_dir, exist_ok=True)
 
         # Read all recording IDs available for this task:
         array_names = glob.glob(os.path.join(this_recording, '*'))
 
-        for this_array in array_names:
-            array_id = os.path.basename(this_array)
+        for array_dir in array_names:
+            this_array = os.path.basename(array_dir)
 
-            log.info('Processing task {}, recording {}, array {}.'.format(this_task, recording_id, array_id))
+            log.info('Processing task {}, recording {}, array {}.'.format(this_task, recording_id, this_array))
 
             # Load data
 
             # Load data from csv / wav files in database:
-            if args.is_dev:
-                audio_array, audio_source, position_array, position_source, required_time = LoadLocataData(
-                    this_array, args, log)
-            else:
-                audio_array, position_array, required_time = LoadLocataData(this_array, args, log, is_dev=False)
+            audio_array, audio_source, position_array, position_source, required_time = LoadLocataData(
+                array_dir, args, log, args.is_dev)
+
+            log.info('Complete!')
+
+            # Create directory for this array in results directory
+            result_dir = array_dir.replace(args.data_dir, args.results_dir)
+            os.makedirs(result_dir, exist_ok=True)
+
+            # Load signal
+            in_localization = Namespace()
+
+            # Get number of mics and mic array geometry:
+            in_localization.numMics = position_array.data[this_array].mic.shape[2]
+
+            # Signal and sampling frequency:
+            in_localization.y = audio_array.data[this_array]    # signal
+            in_localization.fs = audio_array.fs                 # sampling freq
+
+            # Users must provide estimates for each time stamp in in.timestamps
+
+            # Time stamps required for evaluation
+            in_localization.timestamps = ElapsedTime(required_time.time)[required_time.valid_flag]
+            in_localization.time = required_time.time[required_time.valid_flag]
+
+            # Extract ground truth
+
+            # position_array stores all optitrack measurements.
+            # Extract valid measurements only (specified by required_time.valid_flag).
+            truth = GetLocataTruth(this_array, position_array, position_source, required_time, args.is_dev)
+
+            
+            exit(1)

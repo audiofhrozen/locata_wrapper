@@ -22,7 +22,7 @@ def DynamicImport(import_path, alias=dict(), log=None):
     module_name, objname = import_path.split(':')
     try:
         m = importlib.import_module(module_name)
-    except Exception as e:
+    except Exception as e:  # NOQA
         log.error('Function specified by my_alg_name not found!')
         sys.exit(1)
     return getattr(m, objname)

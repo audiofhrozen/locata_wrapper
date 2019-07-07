@@ -1,0 +1,17 @@
+dataset: locata
+data_dir: "/export/corpus/LOCATA/data/dev"
+results_dir: "./results/dev"
+is_dev: true
+arrays:
+  - "benchmark2"
+  - "eigenmike"
+  - "dicit"
+  - "dummy"
+tasks:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6 
+

@@ -39,7 +39,7 @@ def load_locata_txt(fnames, obj_type):
         # Load data:
         txt_table = pd.read_csv(this_txt, sep='\t', header=0)
         _time = txt_table[['year', 'month', 'day',
-                           'hour', 'minute', 'second']].values.T
+                           'hour', 'minute', 'second']]
         _pos = txt_table[['x', 'y', 'z']].values.T
         _ref = txt_table[['ref_vec_x', 'ref_vec_x', 'ref_vec_x']].values.T
         _rot = txt_table[['rotation_11', 'rotation_12', 'rotation_13',
@@ -61,7 +61,7 @@ def load_locata_txt(fnames, obj_type):
         this_obj = this_obj.replace('{}_'.format(obj_type), '')
 
         # Copy to namespace:
-        obj.time = _time
+        obj.time = pd.to_datetime(_time)
         obj.data[str(this_obj)] = Namespace(
             position=_pos, ref_vec=_ref, rotation=_rot,
             mic=_mic)
@@ -83,10 +83,12 @@ def LoadLocataData(this_array, args, log, is_dev=True):
     """
 
     # Time vector:
-    txt_array = np.loadtxt(os.path.join(this_array, 'required_time.txt'),
-                           delimiter='\t', skiprows=1).T
-    required_time = Namespace(time=txt_array[:-1],
-                              valid_flag=txt_array[-1:])
+    txt_array = pd.read_csv(os.path.join(this_array, 'required_time.txt'),
+                           sep='\t')
+    _time = pd.to_datetime(txt_array[['year', 'month', 'day',
+                               'hour', 'minute', 'second']])
+    _valid = np.array(txt_array['valid_flag'].values, dtype=np.bool)
+    required_time = Namespace(time=_time, valid_flag=_valid)
 
     # Audio files:
     wav_fnames = glob.glob(os.path.join(this_array, '*.wav'))
@@ -109,22 +111,26 @@ def LoadLocataData(this_array, args, log, is_dev=True):
     if is_dev:
         audio_source = load_locata_wav(audio_source_idx, 'audio_source')
         audio_source.NS = len(audio_source.data)
+    else:
+        audio_source = None
 
     # Position source data:
     txt_fnames = glob.glob(os.path.join(this_array, '*.txt'))
     if is_dev:
         position_source_idx = [x for x in txt_fnames if 'position_source' in x]
         position_source = load_locata_txt(position_source_idx, 'position_source')
+    else:
+        position_source = None
 
     # Position array data:
     position_array_idx = [x for x in txt_fnames if 'position_array' in x]
     position_array = load_locata_txt(position_array_idx, 'position_array')
 
     # Outputs:
-    if is_dev:
-        return audio_array, audio_source, position_array, position_source, required_time
-    return audio_array, position_array, required_time
+    return audio_array, audio_source, position_array, position_source, required_time
 
+def GetLocataTruth(this_array, position_array, position_source, required_time, is_dev):
+    return None
 
 def LoadDCASEData(this_array, args, log, is_dev=True):
     pass

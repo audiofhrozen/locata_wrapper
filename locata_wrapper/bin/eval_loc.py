@@ -15,6 +15,7 @@ ex = Experiment()
 logging.basicConfig(format='%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s')
 logger = logging.getLogger('my_custom_logger')
 ex.logger = logger
+
 # ex.observers.append(MongoObserver.create())
 
 
@@ -52,7 +53,15 @@ def config_eval():
 
 @ex.main
 def main_eval(_config, _log):
-    args = Namespace(**_config)
+    # Straight copy or use of prt for _config generates error due to ReadOnlyList/Dict
+    # to avoid problems for multiprocessing each value is copy and in for ReadOnlyList
+    # these are converter to lists
+    args = Namespace()
+    for _value in [x for x in _config if '__' not in x]:
+        if 'List' in str(type(_config[_value])):
+            setattr(args, _value, list(_config[_value]))
+        else:
+            setattr(args, _value, _config[_value])
 
     if args.dataset not in ['locata', 'dcase']:
         _log.error('This wrapper only supports LOCATA or DCASE datasets')
@@ -119,7 +128,7 @@ def main_eval(_config, _log):
 
     for this_task in args.tasks:
         if args.processes > 1:
-            pool.map(task_process, [my_alg_name], [this_task], [opts], [args], [_log])
+            pool.map(task_process, [this_task], [my_alg_name], [opts], [args], [_log])
         else:
             task_process(this_task, my_alg_name, opts, args, _log)
     if args.processes > 1:
