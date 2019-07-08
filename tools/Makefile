@@ -18,6 +18,7 @@ venv: miniconda.sh
 	. venv/bin/activate && conda info -a
 locata_wrapper.done: venv
 	. venv/bin/activate && conda install -y matplotlib
+	. venv/bin/activate && conda install -y h5py
 	. venv/bin/activate && pip install -e ..
 	touch locata_wrapper.done
 

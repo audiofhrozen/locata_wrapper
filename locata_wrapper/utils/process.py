@@ -4,14 +4,14 @@ import glob
 import numpy as np
 import os
 
-from locata_wrapper.utils.load_data import LoadLocataData
 from locata_wrapper.utils.load_data import GetLocataTruth
+from locata_wrapper.utils.load_data import LoadLocataData
 
 
 def ElapsedTime(time_array):
     n_steps = time_array.shape[0]
     elapsed_time = np.zeros([n_steps])
-    for i in range (1, n_steps):
+    for i in range(1, n_steps):
         elapsed_time[i] = (time_array[i] - time_array[i - 1]).total_seconds()
     return np.cumsum(elapsed_time)
 
@@ -25,7 +25,7 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
     # os.makedirs(results_task_dir, exist_ok=True)
 
     # Read all recording IDs available for this task:
-    recordings = glob.glob(os.path.join(task_dir, '*'))
+    recordings = sorted(glob.glob(os.path.join(task_dir, '*')))
 
     # Parse through all recordings within this task:
     for this_recording in recordings:
@@ -77,5 +77,11 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             # Extract valid measurements only (specified by required_time.valid_flag).
             truth = GetLocataTruth(this_array, position_array, position_source, required_time, args.is_dev)
 
-            
+            in_localization.array = truth.array
+            in_localization.array_name = this_array
+            in_localization.mic_geom = truth.array.mic
+
+            log.info('...Running localization using {}'.format(algorithm.__name__))
+            results = algorithm(in_localization, opts)
+
             exit(1)

@@ -9,6 +9,34 @@ import soundfile
 import sys
 
 
+def cart2pol(cart):
+    """cart2pol
+
+    Cartesian to spherical transformation for LOCATA coordinate system
+    Inputs:
+        x:      Cartesian x-position [m]
+        y:      Cartesian y-position [m]
+        z:      Cartesian z-position [m]
+
+    Outputs:
+        az:     Azimuth [rad]
+        el:     Elevation [rad]
+        rad:      Radius [m]
+    """
+
+    pol = np.zeros(cart.shape)
+    x = cart[:, 0]
+    y = cart[:, 1]
+    z = cart[:, 2]
+    # radius
+    pol[:, 2] = np.sqrt(np.abs(x) ** 2 + np.abs(y) ** 2 + np.abs(z) ** 2)
+    # elev
+    pol[:, 1] = np.arccos(z / pol[:, 2])
+    # azimuth
+    pol[:, 0] = np.unwrap(np.arctan2(y, x) - (np.pi / 2))
+    return pol
+
+
 def load_locata_wav(fnames, obj_type):
     obj = Namespace()
     obj.data = dict()
@@ -42,9 +70,11 @@ def load_locata_txt(fnames, obj_type):
                            'hour', 'minute', 'second']]
         _pos = txt_table[['x', 'y', 'z']].values.T
         _ref = txt_table[['ref_vec_x', 'ref_vec_x', 'ref_vec_x']].values.T
-        _rot = txt_table[['rotation_11', 'rotation_12', 'rotation_13',
-                          'rotation_21', 'rotation_22', 'rotation_23',
-                          'rotation_31', 'rotation_32', 'rotation_33']].values.T
+        _rot_1 = txt_table[['rotation_11', 'rotation_12', 'rotation_13']].values
+        _rot_2 = txt_table[['rotation_21', 'rotation_22', 'rotation_23']].values
+        _rot_3 = txt_table[['rotation_31', 'rotation_32', 'rotation_33']].values
+        _rot = np.stack([_rot_1, _rot_2, _rot_3], axis=0)
+
         mics = list(set([x.split('_')[0] for x in txt_table if 'mic' in x]))
         if len(mics) > 0:
             for i in range(len(mics)):
@@ -84,9 +114,9 @@ def LoadLocataData(this_array, args, log, is_dev=True):
 
     # Time vector:
     txt_array = pd.read_csv(os.path.join(this_array, 'required_time.txt'),
-                           sep='\t')
+                            sep='\t')
     _time = pd.to_datetime(txt_array[['year', 'month', 'day',
-                               'hour', 'minute', 'second']])
+                                      'hour', 'minute', 'second']])
     _valid = np.array(txt_array['valid_flag'].values, dtype=np.bool)
     required_time = Namespace(time=_time, valid_flag=_valid)
 
@@ -129,6 +159,7 @@ def LoadLocataData(this_array, args, log, is_dev=True):
     # Outputs:
     return audio_array, audio_source, position_array, position_source, required_time
 
+
 def GetLocataTruth(this_array, position_array, position_source, required_time, is_dev):
     """GetLocataTruth
 
@@ -153,20 +184,35 @@ def GetLocataTruth(this_array, position_array, position_source, required_time, i
     # Specified array
     truth.array = position_array.data[this_array]
     for field in truth.array.__dict__:
-        _new_values = getattr(truth.array, field)[:, required_time.valid_flag]
-        setattr(truth.array, field, _new_values)
+        _new_value = getattr(truth.array, field)[:, required_time.valid_flag]
+        setattr(truth.array, field, _new_value)
 
     # Source
     if is_dev:
-        frames = np.sum(required_time.valid_flag)
-
+        frames = int(np.sum(required_time.valid_flag))
         truth.source = position_source.data
         # All sources for this recording
 
-        src_names = [x for x in truth.source]
-        print(src_names)
+        for src_idx in truth.source:
+            for field in truth.source[src_idx].__dict__:
+                _new_value = getattr(truth.source[src_idx], field)
+                if _new_value is not None:
+                    setattr(truth.source[src_idx], field, _new_value[:, required_time.valid_flag])
+
+            # Azimuth and elevation relative to microphone array
+            h_p = truth.source[src_idx].position - truth.array.position
+
+            _pos = np.zeros((frames, 3))
+            for i in range(frames):
+                # Apply rotation / translation of array to source
+                R = np.squeeze(truth.array.rotation[:, i])
+                _pos[i] = np.dot(R.T, h_p[:, i])
+            pol_pos = cart2pol(_pos)
+            # Returned in azimuth, elevation & radius
+            truth.source[src_idx].polar_pos = pol_pos
 
     return truth
+
 
 def LoadDCASEData(this_array, args, log, is_dev=True):
     pass

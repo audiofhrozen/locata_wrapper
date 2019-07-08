@@ -18,6 +18,7 @@ if LooseVersion(pip.__version__) < LooseVersion('19'):
 
 requirements = {
     'install': [
+        'librosa',
         'pandas>=0.24.0',
         'pathos>=0.2.0',
         'pymongo>=3.0.0',

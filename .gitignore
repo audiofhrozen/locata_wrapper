@@ -121,3 +121,4 @@ results/
 miniconda.sh
 local/run.pl
 local/parse_options.sh
+*.hdf5
