@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-import sys
+from argparse import Namespace
 import librosa
+import numpy as np
+from scipy.ndimage.filters import maximum_filter
+from scipy.signal import find_peaks
+import sys
+
 
 
 def MUSIC(inputs, options):
@@ -104,9 +108,88 @@ def MUSIC(inputs, options):
     # NOTE: This is crucial for the DICIT array, the other arrays can be
     # evaluated for fullband signals.
     valid_freq_idx = (800 < fft_freq) * (fft_freq < 1400)
-    valid_x = X[:, valid_freq_idx]
-    # print(valid_x.shape)
-    # print(opti_timestamps.shape)
-    # print(fft_freq.shape)
+    valid_freq = fft_freq[valid_freq_idx]
+    valid_X = X[:, valid_freq_idx]
 
-    return X
+    _power = np.zeros([fftPoint // 2 - 1, az.shape[0], el.shape[0], nblocks])
+    for block_idx in range(nblocks):
+        for freq_idx in range(valid_freq.shape[0]):  # fftPoint/2-1
+            # Block of FFT frames:
+            # print(freq_idx, block_idx)
+            data_block = np.squeeze(valid_X[frame_srt[block_idx]:frame_end[block_idx], freq_idx, :])
+            if data_block.shape[0] > 1:  # ensure svd does not result in empty U
+                # Find nearest OptiTrac sample:
+                _diff = block_timestamps[block_idx] - opti_timestamps
+                closest_opti_idx = np.argmin(_diff)
+                # Autocorrelation
+                Rxx = np.dot(data_block.T, np.conj(data_block))
+
+                # Rxx = U * S * U^H, see [3] eq. (9.32)
+                U, _, _ = np.linalg.svd(Rxx)
+
+                # [3] eq. (9.37), using spectral sparsity assumption:
+                # Signal subspace is 1 dimensional if 1 source is active, hence D = 1
+                Un = U[:, 1:]
+
+                for a_idx in range(az.shape[0]):
+                    for e_idx in range(el.shape[0]):
+                        az_idx = az[a_idx]
+                        el_idx = el[e_idx]
+                        # [2] eq (8.35) modified s.th. az = 0 and el = pi/2 result in eta = [0 1 0],
+                        #  i.e., pointing along y-axis:
+                        eta = np.array([-np.sin(el_idx) * np.sin(az_idx), np.sin(el_idx) * np.cos(az_idx), np.cos(el_idx)])[:, None]
+                        rot_eta = np.dot(np.squeeze(opti_rotation[:, closest_opti_idx, :]), eta)
+
+                        # [2] eq (8.36) - TDoA:
+                        tau = 1 / options.c * np.dot(rot_eta.T, np.squeeze(opti_mics[:, closest_opti_idx, subarray]) - 
+                            np.repeat(opti_mics[:, closest_opti_idx:closest_opti_idx + 1, subarray[ref_mic]], numMic, axis=1))
+
+                        # [2] eq (8.34) - Steering vector:
+                        SV = np.exp(1j * 2 * np.pi * valid_freq[freq_idx] * tau).T
+
+                        # [3] eq. (9.44):
+                        _power[freq_idx, a_idx, e_idx, block_idx] = 1. / np.sum(
+                            np.abs(np.linalg.multi_dot([SV.conj().T, Un, Un.conj().T, SV])))
+    # Sum spectra over all frequencies:
+    _spectrum = _power.sum(0).transpose(2, 0, 1)
+
+    # -> Find DOA
+    # NOTE: Single-source assumption
+    azimuth = np.full([nblocks], np.nan)
+    elevation = np.full([nblocks], np.nan)
+
+    for block_idx in range(nblocks):
+        if _spectrum.shape[2] == 1:
+            # find_peak code for 1 elevation
+            locs = find_peaks(spectrum[block_idx, :])
+            if len(locs) > 0:
+                azimuth[block_idx] = az[locs[0]]
+        else:
+            mesh_az, mesh_el = np.meshgrid(az, el)
+            mesh_spec = np.squeeze(_spectrum[block_idx, :, :])
+
+            # Extract regional maxima:
+            lm = maximum_filter(mesh_spec, 10)
+            msk = (mesh_spec == lm)
+            # Global maximum:
+            loc = np.argmax(lm)
+            loc_az, loc_el = np.unravel_index(loc, mesh_spec.shape)
+            azimuth[block_idx] = az[loc_az]
+            elevation[block_idx] = el[loc_el]
+
+    # -> Interpolate estimates to OptiTracker timestamps
+    # Interpolate MUSIC estimates to required time stamps:
+    interp_azimuth = np.interp(inputs.timestamps, block_timestamps, azimuth)
+    interp_elevation = np.interp(inputs.timestamps, block_timestamps, elevation)
+
+    # Output 1 - interpolated
+    N_sources = 1
+    out = Namespace()
+    out.source = dict()
+    for src_idx in range(N_sources):
+        out.source[src_idx] = Namespace(
+            azimuth=np.unwrap(interp_azimuth),
+            elevation=np.unwrap(interp_elevation),
+            time=inputs.time,
+            timestamps=inputs.timestamps)
+    return out

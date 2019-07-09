@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from argparse import Namespace
+import h5py
 import glob
 import numpy as np
 import os
@@ -84,4 +85,7 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             log.info('...Running localization using {}'.format(algorithm.__name__))
             results = algorithm(in_localization, opts)
 
+            with h5py.File('test.hdf5', 'w') as f:
+                f.create_dataset('azimuth', data=results.source[0].azimuth)
+                f.create_dataset('elevation', data=results.source[0].elevation)
             exit(1)
