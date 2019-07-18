@@ -87,7 +87,7 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             log.info('...Running localization using {}'.format(algorithm.__name__))
             start_time = timeit.default_timer()
             results = algorithm(in_localization, opts)
-            log.info('Localization Complete!')
+
             results.telapsed = timeit.default_timer() - start_time
 
             # Check results structure is provided in correct format
@@ -95,7 +95,10 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             # Plots & Save results to file
 
             print(results.telapsed)
+            log.info('Localization Complete!')
 
+            # Directory to save figures to:
+            
             # with h5py.File('test.hdf5', 'w') as f:
             #   f.create_dataset('azimuth', data=results.source[0].azimuth)
             #    f.create_dataset('elevation', data=results.source[0].elevation)
