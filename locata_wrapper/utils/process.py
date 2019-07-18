@@ -4,9 +4,11 @@ import h5py
 import glob
 import numpy as np
 import os
+import timeit
 
 from locata_wrapper.utils.load_data import GetLocataTruth
 from locata_wrapper.utils.load_data import LoadLocataData
+from locata_wrapper.utils.check import CheckLocataResults
 
 
 def ElapsedTime(time_array):
@@ -50,7 +52,7 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             audio_array, audio_source, position_array, position_source, required_time = LoadLocataData(
                 array_dir, args, log, args.is_dev)
 
-            log.info('Complete!')
+            log.info('Processing Complete!')
 
             # Create directory for this array in results directory
             result_dir = array_dir.replace(args.data_dir, args.results_dir)
@@ -83,9 +85,18 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             in_localization.mic_geom = truth.array.mic
 
             log.info('...Running localization using {}'.format(algorithm.__name__))
+            start_time = timeit.default_timer()
             results = algorithm(in_localization, opts)
+            log.info('Localization Complete!')
+            results.telapsed = timeit.default_timer() - start_time
 
-            with h5py.File('test.hdf5', 'w') as f:
-                f.create_dataset('azimuth', data=results.source[0].azimuth)
-                f.create_dataset('elevation', data=results.source[0].elevation)
+            # Check results structure is provided in correct format
+            CheckLocataResults(results, in_localization, opts, log)
+            # Plots & Save results to file
+
+            print(results.telapsed)
+
+            # with h5py.File('test.hdf5', 'w') as f:
+            #   f.create_dataset('azimuth', data=results.source[0].azimuth)
+            #    f.create_dataset('elevation', data=results.source[0].elevation)
             exit(1)

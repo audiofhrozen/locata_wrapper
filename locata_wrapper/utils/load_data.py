@@ -202,14 +202,11 @@ def GetLocataTruth(this_array, position_array, position_source, required_time, i
             # Azimuth and elevation relative to microphone array
             h_p = truth.source[src_idx].position - truth.array.position
 
-            _pos = np.zeros((frames, 3))
-            for i in range(frames):
-                # Apply rotation / translation of array to source
-                R = np.squeeze(truth.array.rotation[:, i])
-                _pos[i] = np.dot(R.T, h_p[:, i])
-            pol_pos = cart2pol(_pos)
+            # Apply rotation / translation of array to source
+            pol_pos = np.squeeze(np.matmul(truth.array.rotation.transpose(1, 2, 0), h_p.T[:, :, None]))
+
             # Returned in azimuth, elevation & radius
-            truth.source[src_idx].polar_pos = pol_pos
+            truth.source[src_idx].polar_pos = cart2pol(pol_pos)
 
     return truth
 
