@@ -3,13 +3,14 @@ from argparse import Namespace
 import h5py
 import glob
 import numpy as np
+import pandas as pd
 import os
 import timeit
 
+from locata_wrapper.utils.check import CheckLocataResults
 from locata_wrapper.utils.load_data import GetLocataTruth
 from locata_wrapper.utils.load_data import LoadLocataData
-from locata_wrapper.utils.check import CheckLocataResults
-
+from locata_wrapper.utils.metrics import CalculateContinueDOAScores
 
 def ElapsedTime(time_array):
     n_steps = time_array.shape[0]
@@ -88,14 +89,25 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             start_time = timeit.default_timer()
             results = algorithm(in_localization, opts)
 
-            results.telapsed = timeit.default_timer() - start_time
+            # results.telapsed = timeit.default_timer() - start_time
 
             # Check results structure is provided in correct format
-            CheckLocataResults(results, in_localization, opts, log)
+            # CheckLocataResults(results, in_localization, opts, log)
             # Plots & Save results to file
 
-            print(results.telapsed)
             log.info('Localization Complete!')
+
+            _idx = [x for x in truth.source]
+            for source_id in range(len(results.source)):
+                df = pd.DataFrame(results.source[source_id])
+                _source_id = _idx[source_id]
+                CalculateContinueDOAScores(df[['azimuth', 'elevation']].values, truth.source[_source_id].polar_pos[:, 0:2])
+                df.to_csv('test.txt', index=False, sep='\t', encoding='utf-8')
+                
+                np.savetxt('truth.txt', np.degrees(truth.source[_source_id].polar_pos))
+                #print(results.source[source_id].time.shape)
+                #print(results.source[source_id].timestamps.shape)
+                #print(results.source[source_id].elevation.shape)
 
             # Directory to save figures to:
             

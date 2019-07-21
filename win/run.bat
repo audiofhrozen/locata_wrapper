@@ -33,5 +33,5 @@ python locata_wrapper/bin/eval_loc.py -l %VERBOSE% ^
 
 :eof
 cd win
-echo %~nx0 Done.
+echo run.bat Done.
 endlocal

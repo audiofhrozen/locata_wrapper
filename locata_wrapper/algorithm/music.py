@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from argparse import Namespace
+from collections import OrderedDict
 import librosa
 import numpy as np
 from scipy.ndimage.filters import maximum_filter
@@ -185,11 +186,18 @@ def MUSIC(inputs, options):
     # Output 1 - interpolated
     N_sources = 1
     out = Namespace()
-    out.source = dict()
+    out.source = list()
     for src_idx in range(N_sources):
-        out.source[src_idx] = Namespace(
+        results = dict(
+            year=inputs.time.dt.year,
+            month=inputs.time.dt.month,
+            day=inputs.time.dt.day,
+            hour=inputs.time.dt.hour,
+            minute=inputs.time.dt.minute,
+            second=inputs.time.dt.second + inputs.time.dt.microsecond / 1e6,
+            timestamps=inputs.timestamps,
             azimuth=np.unwrap(interp_azimuth),
             elevation=np.unwrap(interp_elevation),
-            time=inputs.time,
-            timestamps=inputs.timestamps)
+            )
+        out.source.append(results)
     return out

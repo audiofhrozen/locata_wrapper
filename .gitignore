@@ -116,9 +116,13 @@ dmypy.json
 # customs
 exp/
 results/
+data/
+
 *.done
+*.hdf5
+*.gz
 
 miniconda.sh
+conf/custom*
 local/run.pl
 local/parse_options.sh
-*.hdf5
