@@ -121,6 +121,7 @@ data/
 *.done
 *.hdf5
 *.gz
+*.npy
 
 miniconda.sh
 conf/custom*

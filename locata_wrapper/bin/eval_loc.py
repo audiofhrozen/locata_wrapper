@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Copyright 2019 Waseda University (Nelson Yalta)
+# Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
+
 from argparse import Namespace
 import locata_wrapper.utils as locata_utils
 import logging

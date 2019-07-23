@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Copyright 2019 Waseda University (Nelson Yalta)
+# Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
+
 from argparse import Namespace
 import glob
 import numpy as np
@@ -69,7 +72,7 @@ def load_locata_txt(fnames, obj_type):
         _time = txt_table[['year', 'month', 'day',
                            'hour', 'minute', 'second']]
         _pos = txt_table[['x', 'y', 'z']].values.T
-        _ref = txt_table[['ref_vec_x', 'ref_vec_x', 'ref_vec_x']].values.T
+        _ref = txt_table[['ref_vec_x', 'ref_vec_y', 'ref_vec_z']].values.T
         _rot_1 = txt_table[['rotation_11', 'rotation_12', 'rotation_13']].values
         _rot_2 = txt_table[['rotation_21', 'rotation_22', 'rotation_23']].values
         _rot_3 = txt_table[['rotation_31', 'rotation_32', 'rotation_33']].values

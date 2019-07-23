@@ -31,6 +31,7 @@ requirements = {
     ],
     'setup': ['numpy', 'pytest-runner'],
     'test': [
+        'ipdb',
         'pytest>=3.3.0',
         'pytest-pythonpath>=0.7.3',
         'pytest-cov>=2.7.1',

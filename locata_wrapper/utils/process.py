@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Copyright 2019 Waseda University (Nelson Yalta)
+#  Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
+
 from argparse import Namespace
 import h5py
 import glob
@@ -101,17 +104,11 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             for source_id in range(len(results.source)):
                 df = pd.DataFrame(results.source[source_id])
                 _source_id = _idx[source_id]
-                CalculateContinueDOAScores(df[['azimuth', 'elevation']].values, truth.source[_source_id].polar_pos[:, 0:2])
-                df.to_csv('test.txt', index=False, sep='\t', encoding='utf-8')
-                
-                np.savetxt('truth.txt', np.degrees(truth.source[_source_id].polar_pos))
-                #print(results.source[source_id].time.shape)
-                #print(results.source[source_id].timestamps.shape)
-                #print(results.source[source_id].elevation.shape)
-
+                mae_ele, mae_azi, doa_error = CalculateContinueDOAScores(df[['azimuth', 'elevation']].values, truth.source[_source_id].polar_pos[:, 0:2])
+                df.to_csv(os.path.join(result_dir, 'source_{}.txt'.format(source_id + 1)), index=False, sep='\t', encoding='utf-8')
+                np.savetxt(os.path.join(result_dir, 'truth.txt'), truth.source[_source_id].polar_pos)
+                with open(os.path.join(result_dir, 'metrics.txt'), 'w') as f:
+                    f.write('azimuth MAE (dg): {:.02f} \n'.format(np.degrees(mae_azi)))
+                    f.write('elevation MAE (dg): {:.02f} \n'.format(np.degrees(mae_ele)))
+                    f.write('DOA error: {:.02f} \n'.format(doa_error))
             # Directory to save figures to:
-            
-            # with h5py.File('test.hdf5', 'w') as f:
-            #   f.create_dataset('azimuth', data=results.source[0].azimuth)
-            #    f.create_dataset('elevation', data=results.source[0].elevation)
-            exit(1)

@@ -1,3 +1,6 @@
+# Copyright 2019 Waseda University (Nelson Yalta)
+# Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
+
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
@@ -15,7 +18,6 @@ def CalculateContinueDOAScores(predicted_doa, true_doa, predicted_sed=None, true
 
     else:
         n_good_frames = 0
-    print(mae_ele, mae_azi, doa_loss)
     return mae_ele, mae_azi, doa_loss
 
 

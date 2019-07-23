@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# Copyright 2019 Waseda University (Nelson Yalta)
+# Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0)
 from argparse import Namespace
 from collections import OrderedDict
 import librosa
@@ -99,7 +101,7 @@ def MUSIC(inputs, options):
 
     # -> MUSIC
     # Make blocks out of frames:
-    frame_srt = np.arange(0, nframe, block_step)
+    frame_srt = np.arange(0, nframe - 1, block_step)
     frame_end = np.arange(frames_per_block, nframe, block_step)
     frame_end = np.pad(frame_end, (0, frame_srt.shape[0] - frame_end.shape[0]), 'constant', constant_values=nframe - 1)
     nblocks = frame_srt.shape[0]
@@ -131,7 +133,7 @@ def MUSIC(inputs, options):
                 # [3] eq. (9.37), using spectral sparsity assumption:
                 # Signal subspace is 1 dimensional if 1 source is active, hence D = 1
                 Un = U[:, 1:]
-
+                
                 for a_idx in range(az.shape[0]):
                     for e_idx in range(el.shape[0]):
                         az_idx = az[a_idx]
@@ -162,16 +164,14 @@ def MUSIC(inputs, options):
     for block_idx in range(nblocks):
         if _spectrum.shape[2] == 1:
             # find_peak code for 1 elevation
-            locs = find_peaks(spectrum[block_idx, :])
+            locs = find_peaks(_spectrum[block_idx, :])
             if len(locs) > 0:
                 azimuth[block_idx] = az[locs[0]]
         else:
-            mesh_az, mesh_el = np.meshgrid(az, el)
             mesh_spec = np.squeeze(_spectrum[block_idx, :, :])
 
             # Extract regional maxima:
-            lm = maximum_filter(mesh_spec, 10)
-            msk = (mesh_spec == lm)
+            lm = maximum_filter(mesh_spec, 1)
             # Global maximum:
             loc = np.argmax(lm)
             loc_az, loc_el = np.unravel_index(loc, mesh_spec.shape)
