@@ -82,6 +82,8 @@ def MUSIC(inputs, options):
     opti_mics = inputs.array.mic[:, unique_idx]
 
     duration = inputs.y.shape[0]
+    inputs.y = np.asfortranarray(inputs.y)
+
     # -> STFT
     X = np.stack([librosa.stft(inputs.y[:, ch],
                                n_fft=fftPoint,

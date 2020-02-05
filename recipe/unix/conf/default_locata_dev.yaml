@@ -1,4 +1,3 @@
-dataset: locata
 data_dir: "/export/corpus/LOCATA/data/dev"
 results_dir: "./results/dev"
 is_dev: true

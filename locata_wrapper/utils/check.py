@@ -5,7 +5,7 @@
 import sys
 
 
-def CheckLocataResults(results, inputs, opts, log):
+def CheckResults(results, inputs, opts, log):
     if 'source' not in results.__dict__ or 'telapsed' not in results.__dict__:
         log.error('Invalid structure of results.')
         sys.exit(1)

@@ -1,11 +1,13 @@
-# LOCATA Code for python
+# LOCATA Challenge Code for python
 
-This scripts allows to test LOCATA in python (instead of MATLAB)
+This package allows to work with LOCATA in python (code in MATLAB can be found [here](https://github.com/cevers/sap_locata_io))
+
 
 ## Requiriments
 
 - Python 3.6.1
 - numpy 1.16.1
+
 
 ## Installation
 
@@ -16,14 +18,14 @@ $ cd tools
 $ make
 ```
 
+
 ## Algorithms
 
-Currently, the code only supports MUSIC.
+Currently, the package only supports MUSIC.
+
 
 ## TODO
 
-- Support DCASE 2019 dataset
 - Implement additional algorithms:
   - GCC-PHAT
   - SRP-PHAT
-
