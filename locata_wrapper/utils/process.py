@@ -5,14 +5,15 @@
 from argparse import Namespace
 import h5py
 import glob
+import logging
 import numpy as np
 import pandas as pd
 import os
 import timeit
 
-from locata_wrapper.utils.check import CheckLocataResults
-from locata_wrapper.utils.load_data import GetLocataTruth
-from locata_wrapper.utils.load_data import LoadLocataData
+from locata_wrapper.utils.check import CheckResults
+from locata_wrapper.utils.load_data import GetTruth
+from locata_wrapper.utils.load_data import LoadData
 from locata_wrapper.utils.metrics import CalculateContinueDOAScores
 
 def ElapsedTime(time_array):
@@ -23,7 +24,7 @@ def ElapsedTime(time_array):
     return np.cumsum(elapsed_time)
 
 
-def ProcessTaskLocata(this_task, algorithm, opts, args, log):
+def ProcessTask(this_task, algorithm, opts, args, log=logging):
     task_dir = os.path.join(args.data_dir, 'task{}'.format(this_task))
 
     # Create directory for this task in results directory:
@@ -53,7 +54,7 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             # Load data
 
             # Load data from csv / wav files in database:
-            audio_array, audio_source, position_array, position_source, required_time = LoadLocataData(
+            audio_array, audio_source, position_array, position_source, required_time = LoadData(
                 array_dir, args, log, args.is_dev)
 
             log.info('Processing Complete!')
@@ -82,7 +83,7 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
 
             # position_array stores all optitrack measurements.
             # Extract valid measurements only (specified by required_time.valid_flag).
-            truth = GetLocataTruth(this_array, position_array, position_source, required_time, args.is_dev)
+            truth = GetTruth(this_array, position_array, position_source, required_time, args.is_dev)
 
             in_localization.array = truth.array
             in_localization.array_name = this_array
@@ -95,7 +96,7 @@ def ProcessTaskLocata(this_task, algorithm, opts, args, log):
             # results.telapsed = timeit.default_timer() - start_time
 
             # Check results structure is provided in correct format
-            # CheckLocataResults(results, in_localization, opts, log)
+            # CheckResults(results, in_localization, opts, log)
             # Plots & Save results to file
 
             log.info('Localization Complete!')

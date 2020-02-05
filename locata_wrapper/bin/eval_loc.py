@@ -44,7 +44,6 @@ def config_eval():
     Outputs: N/A (saves results as csv files in save_dir)
     """
     # [locata or dcase]
-    dataset = 'locata'  # NOQA
     data_dir = './data'  # NOQA
     results_dir = './results'  # NOQA
     is_dev = True  # NOQA
@@ -66,10 +65,6 @@ def main_eval(_config, _log):
         else:
             setattr(args, _value, _config[_value])
 
-    if args.dataset not in ['locata', 'dcase']:
-        _log.error('This wrapper only supports LOCATA or DCASE datasets')
-        sys.error(1)
-
     # Selection of the localisation algorithm
 
     # Enter the name of the PYTHON function of your localization algorithm.
@@ -89,17 +84,11 @@ def main_eval(_config, _log):
         sys.exit(1)
 
     # Initialize settings required for these scripts:
-    if args.dataset == 'locata':
-        opts = locata_utils.LocataInitalOptions()
-    else:
-        opts = locata_utils.DCASEInitalOptions()
+    opts = locata_utils.InitalOptions()
 
     # Check and process input arguments
     # check if input contains valid tasks
-    if args.dataset == 'locata':
-        error_tasks = [x for x in list(set(args.tasks)) if not 0 < x < 7]
-    else:
-        error_tasks = [x for x in list(set(args.tasks)) if not 0 < x < 5]
+    error_tasks = [x for x in list(set(args.tasks)) if not 0 < x < 7]
     if len(error_tasks) > 1:
         _log.error('Invalid input for task number(s)')
         sys.exit(1)
@@ -119,10 +108,7 @@ def main_eval(_config, _log):
 
     # Process
     # Parse through all specified task folders
-    if args.dataset == 'locata':
-        task_process = locata_utils.ProcessTaskLocata
-    else:
-        task_process = locata_utils.ProcessTaskDCASE
+    task_process = locata_utils.ProcessTask
 
     # Multiprocessing
     if args.processes > 1:

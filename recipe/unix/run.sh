@@ -7,7 +7,7 @@
 . ./cmd.sh
 
 verbose="INFO"
-config_file=./conf/default_unix_locata_dev.yaml
+config_file=./conf/default_locata_dev.yaml
 process=1
 
 . local/parse_options.sh || exit 1;

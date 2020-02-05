@@ -40,7 +40,7 @@ def cart2pol(cart):
     return pol
 
 
-def load_locata_wav(fnames, obj_type):
+def load_wav(fnames, obj_type):
     obj = Namespace()
     obj.data = dict()
     for this_wav in fnames:
@@ -63,7 +63,7 @@ def load_locata_wav(fnames, obj_type):
     return obj
 
 
-def load_locata_txt(fnames, obj_type):
+def load_txt(fnames, obj_type):
     obj = Namespace()
     obj.data = dict()
     for this_txt in fnames:
@@ -101,7 +101,7 @@ def load_locata_txt(fnames, obj_type):
     return obj
 
 
-def LoadLocataData(this_array, args, log, is_dev=True):
+def LoadData(this_array, args, log, is_dev=True):
     """loads LOCATA csv and wav data
 
     Inputs:
@@ -138,11 +138,11 @@ def LoadLocataData(this_array, args, log, is_dev=True):
             sys.exit(1)
 
     # Audio array data
-    audio_array = load_locata_wav(audio_array_idx, 'audio_array')
+    audio_array = load_wav(audio_array_idx, 'audio_array')
 
     # Audio source data:
     if is_dev:
-        audio_source = load_locata_wav(audio_source_idx, 'audio_source')
+        audio_source = load_wav(audio_source_idx, 'audio_source')
         audio_source.NS = len(audio_source.data)
     else:
         audio_source = None
@@ -151,19 +151,19 @@ def LoadLocataData(this_array, args, log, is_dev=True):
     txt_fnames = glob.glob(os.path.join(this_array, '*.txt'))
     if is_dev:
         position_source_idx = [x for x in txt_fnames if 'position_source' in x]
-        position_source = load_locata_txt(position_source_idx, 'position_source')
+        position_source = load_txt(position_source_idx, 'position_source')
     else:
         position_source = None
 
     # Position array data:
     position_array_idx = [x for x in txt_fnames if 'position_array' in x]
-    position_array = load_locata_txt(position_array_idx, 'position_array')
+    position_array = load_txt(position_array_idx, 'position_array')
 
     # Outputs:
     return audio_array, audio_source, position_array, position_source, required_time
 
 
-def GetLocataTruth(this_array, position_array, position_source, required_time, is_dev):
+def GetTruth(this_array, position_array, position_source, required_time, is_dev):
     """GetLocataTruth
 
     creates Namespace containing OptiTrac ground truth data for and relative to the specified array
@@ -212,7 +212,3 @@ def GetLocataTruth(this_array, position_array, position_source, required_time, i
             truth.source[src_idx].polar_pos = cart2pol(pol_pos)
 
     return truth
-
-
-def LoadDCASEData(this_array, args, log, is_dev=True):
-    pass
