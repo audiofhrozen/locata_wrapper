@@ -164,7 +164,7 @@ def LoadData(this_array, args=None, log=logging, is_dev=True):
     return audio_array, audio_source, position_array, position_source, required_time
 
 
-def GetTruth(this_array, position_array, position_source, required_time, is_dev=False):
+def GetTruth(this_array, position_array, position_source, required_time, is_dev=True):
     """GetLocataTruth
 
     creates Namespace containing OptiTrac ground truth data for and relative to the specified array
