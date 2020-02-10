@@ -4,6 +4,7 @@
 
 from argparse import Namespace
 import glob
+import logging
 import numpy as np
 import os
 import pandas as pd
@@ -101,7 +102,7 @@ def load_txt(fnames, obj_type):
     return obj
 
 
-def LoadData(this_array, args, log, is_dev=True):
+def LoadData(this_array, args=None, log=logging, is_dev=True):
     """loads LOCATA csv and wav data
 
     Inputs:
@@ -130,11 +131,11 @@ def LoadData(this_array, args, log, is_dev=True):
     if is_dev:
         audio_source_idx = [x for x in wav_fnames if 'audio_source' in x]
         if len(audio_array_idx) + len(audio_source_idx) == 0:
-            log.error('Unexpected audio file in folder'.format(this_array))
+            log.error(f'Unexpected audio file in folder {this_array}')
             sys.exit(1)
     else:
         if len(audio_array_idx) == 0:
-            log.error('Unexpected audio file in folder'.format(this_array))
+            log.error(f'Unexpected audio file in folder {this_array}')
             sys.exit(1)
 
     # Audio array data
