@@ -1,4 +1,11 @@
 @echo off
+SET DISPLAY=:0
+SET "THIS_DIR=%cd%"
+CD ..\..\
 
-set DISPLAY=:0
-set PYTHONPATH=./
+
+SET "ROOT_DIR=%cd%"
+
+CALL tools\venv\condabin\activate.bat
+CD %THIS_DIR%
+echo %ROOT_DIR%
