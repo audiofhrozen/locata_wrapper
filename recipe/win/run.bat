@@ -24,9 +24,9 @@ if not "%1"=="" (
 )
 rem end routine
 
-python -m eval_loc.py -l %VERBOSE% ^
-                                      with %CONFIG_FILE% ^
-                                      processes=%PROCESS%
+python %ROOT_DIR%\locata_wrapper\bin\eval_loc.py -l %VERBOSE% ^
+                                                    with %CONFIG_FILE% ^
+                                                    processes=%PROCESS%
 
 
 :eof
