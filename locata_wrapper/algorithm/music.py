@@ -4,6 +4,7 @@
 from argparse import Namespace
 from collections import OrderedDict
 import librosa
+import logging
 import numpy as np
 from scipy.ndimage.filters import maximum_filter
 from scipy.signal import find_peaks
@@ -11,7 +12,7 @@ import sys
 
 
 
-def MUSIC(inputs, options):
+def MUSIC(inputs, options, log=logging):
     """MUSIC
 
     implementation of Multiple SIgnal Classification (MUSIC) algorithm as described in [3].
@@ -51,13 +52,13 @@ def MUSIC(inputs, options):
     if inputs.array_name == 'dicit':
         subarray = np.array([6, 7, 9])
         ref_mic = 1
-    elif 'benchmark2':
+    elif inputs.array_name == 'benchmark2':
         subarray = np.arange(12).astype(np.int)
         ref_mic = 1
-    elif 'eigenmike':
+    elif inputs.array_name == 'eigenmike':
         subarray = np.arange(32).astype(np.int)
         ref_mic = 1
-    elif 'dummy':
+    elif inputs.array_name == 'dummy':
         subarray = np.arange(4).astype(np.int)
         ref_mic = 1
     else:
@@ -182,7 +183,9 @@ def MUSIC(inputs, options):
 
     # -> Interpolate estimates to OptiTracker timestamps
     # Interpolate MUSIC estimates to required time stamps:
-    interp_azimuth = np.interp(inputs.timestamps, block_timestamps, azimuth)
+    interp_azimuth = np.interp(inputs.timestamps, block_timestamps, azimuth, left=np.NaN)
+    print(interp_azimuth)
+    exit(1)
     interp_elevation = np.interp(inputs.timestamps, block_timestamps, elevation)
 
     # Output 1 - interpolated

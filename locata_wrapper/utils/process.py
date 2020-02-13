@@ -16,6 +16,7 @@ from locata_wrapper.utils.load_data import GetTruth
 from locata_wrapper.utils.load_data import LoadData
 from locata_wrapper.utils.metrics import CalculateContinueDOAScores
 
+
 def ElapsedTime(time_array):
     n_steps = time_array.shape[0]
     elapsed_time = np.zeros([n_steps])
@@ -39,18 +40,13 @@ def ProcessTask(this_task, algorithm, opts, args, log=logging):
     for this_recording in recordings:
         recording_id = int(this_recording.split('recording')[1])
 
-        # Create directory for this recording in results directory:
-        # rec_dir = this_recording.replace(args.data_dir, args.results_dir)
-        # os.makedirs(rec_dir, exist_ok=True)
-
         # Read all recording IDs available for this task:
         array_names = glob.glob(os.path.join(this_recording, '*'))
-
         for array_dir in array_names:
             this_array = os.path.basename(array_dir)
-
+            if this_array not in args.arrays:
+                continue
             log.info('Processing task {}, recording {}, array {}.'.format(this_task, recording_id, this_array))
-
             # Load data
 
             # Load data from csv / wav files in database:

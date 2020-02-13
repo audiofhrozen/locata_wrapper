@@ -114,6 +114,7 @@ dmypy.json
 .pyre/
 
 # customs
+.vscode
 exp/
 results/
 data/
