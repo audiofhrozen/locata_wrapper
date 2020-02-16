@@ -11,6 +11,21 @@ from scipy.signal import find_peaks
 import sys
 
 
+def wrapTo2Pi(_lambda):
+    """Wrap angle in radians to [0 pi]"""
+    positiveInput = _lambda > 0
+    _lambda = np.mod(_lambda, 2 * np.pi)
+    _idx = (_lambda == 0) * positiveInput
+    _lambda[_idx] = 2 * np.pi
+    return _lambda
+
+
+def wrapToPi(_lambda):
+    """Wrap angle in radians to [-pi pi]"""
+    q = (_lambda < -np.pi) + (np.pi < _lambda)
+    _lambda[q] = wrapTo2Pi(_lambda[q] + np.pi) - np.pi
+    return _lambda
+
 
 def MUSIC(inputs, options, log=logging):
     """MUSIC
@@ -183,16 +198,19 @@ def MUSIC(inputs, options, log=logging):
 
     # -> Interpolate estimates to OptiTracker timestamps
     # Interpolate MUSIC estimates to required time stamps:
+    # Use left np.NaN to be compatible with the matlab code.
     interp_azimuth = np.interp(inputs.timestamps, block_timestamps, azimuth, left=np.NaN)
-    print(interp_azimuth)
-    exit(1)
-    interp_elevation = np.interp(inputs.timestamps, block_timestamps, elevation)
+    interp_elevation = np.interp(inputs.timestamps, block_timestamps, elevation, left=np.NaN)
 
     # Output 1 - interpolated
     N_sources = 1
     out = Namespace()
     out.source = list()
-    for src_idx in range(N_sources):
+    for _ in range(N_sources):
+        noNaN = ~np.isnan(interp_azimuth)
+        interp_azimuth[noNaN] = wrapToPi(interp_azimuth[noNaN])
+        noNaN = ~np.isnan(interp_elevation)
+        interp_elevation[noNaN] = wrapToPi(interp_elevation[noNaN])
         results = dict(
             year=inputs.time.dt.year,
             month=inputs.time.dt.month,
@@ -201,8 +219,8 @@ def MUSIC(inputs, options, log=logging):
             minute=inputs.time.dt.minute,
             second=inputs.time.dt.second + inputs.time.dt.microsecond / 1e6,
             timestamps=inputs.timestamps,
-            azimuth=np.unwrap(interp_azimuth),
-            elevation=np.unwrap(interp_elevation),
+            azimuth=interp_azimuth,
+            elevation=interp_elevation,
             )
         out.source.append(results)
     return out
