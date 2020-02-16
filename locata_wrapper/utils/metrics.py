@@ -6,7 +6,8 @@ from scipy.optimize import linear_sum_assignment
 
 
 def CalculateContinueDOAScores(predicted_doa, true_doa, predicted_sed=None, true_sed=None):
-
+    nonNaN = ~np.isnan(predicted_doa)
+    predicted_doa[nonNaN] = 0.0
     if predicted_sed is None:
         # Consider all frames as good frames:
         # n_good_frames = predicted_doa.shape[0]

@@ -114,6 +114,7 @@ dmypy.json
 .pyre/
 
 # customs
+.vscode
 exp/
 results/
 data/
@@ -124,6 +125,9 @@ data/
 *.npy
 
 miniconda.sh
-conf/custom*
-local/run.pl
-local/parse_options.sh
+miniconda3.exe
+
+recipe/**/conf/custom_*
+recipe/**/local/run.pl
+recipe/**/local/parse_options.sh
+recipe/**/local/custom_env.*

@@ -16,6 +16,9 @@ from locata_wrapper.utils.load_data import GetTruth
 from locata_wrapper.utils.load_data import LoadData
 from locata_wrapper.utils.metrics import CalculateContinueDOAScores
 
+from matplotlib import pyplot as plt
+
+
 def ElapsedTime(time_array):
     n_steps = time_array.shape[0]
     elapsed_time = np.zeros([n_steps])
@@ -39,18 +42,13 @@ def ProcessTask(this_task, algorithm, opts, args, log=logging):
     for this_recording in recordings:
         recording_id = int(this_recording.split('recording')[1])
 
-        # Create directory for this recording in results directory:
-        # rec_dir = this_recording.replace(args.data_dir, args.results_dir)
-        # os.makedirs(rec_dir, exist_ok=True)
-
         # Read all recording IDs available for this task:
         array_names = glob.glob(os.path.join(this_recording, '*'))
-
         for array_dir in array_names:
             this_array = os.path.basename(array_dir)
-
+            if this_array not in args.arrays:
+                continue
             log.info('Processing task {}, recording {}, array {}.'.format(this_task, recording_id, this_array))
-
             # Load data
 
             # Load data from csv / wav files in database:
@@ -100,16 +98,48 @@ def ProcessTask(this_task, algorithm, opts, args, log=logging):
             # Plots & Save results to file
 
             log.info('Localization Complete!')
+            x_axis = np.average(audio_array.data[this_array], axis=1)
+            x_len = x_axis.shape[0]
+            fs = audio_array.fs 
+            t_axis = np.linspace(0, x_len / fs, x_len)
 
             _idx = [x for x in truth.source]
             for source_id in range(len(results.source)):
                 df = pd.DataFrame(results.source[source_id])
                 _source_id = _idx[source_id]
-                mae_ele, mae_azi, doa_error = CalculateContinueDOAScores(df[['azimuth', 'elevation']].values, truth.source[_source_id].polar_pos[:, 0:2])
-                df.to_csv(os.path.join(result_dir, 'source_{}.txt'.format(source_id + 1)), index=False, sep='\t', encoding='utf-8')
-                np.savetxt(os.path.join(result_dir, 'truth.txt'), truth.source[_source_id].polar_pos)
-                with open(os.path.join(result_dir, 'metrics.txt'), 'w') as f:
-                    f.write('azimuth MAE (dg): {:.02f} \n'.format(np.degrees(mae_azi)))
-                    f.write('elevation MAE (dg): {:.02f} \n'.format(np.degrees(mae_ele)))
-                    f.write('DOA error: {:.02f} \n'.format(doa_error))
-            # Directory to save figures to:
+                filename = os.path.join(result_dir, 'source_{}'.format(source_id + 1))
+                # mae_ele, mae_azi, doa_error = CalculateContinueDOAScores(df[['azimuth', 'elevation']].values, truth.source[_source_id].polar_pos[:, 0:2])
+                df.to_csv(f'{filename}.txt', index=False, sep='\t', encoding='utf-8')
+                # np.savetxt(os.path.join(result_dir, 'truth.txt'), truth.source[_source_id].polar_pos)
+
+                # Save figures to:
+                azu_x_pd = np.degrees(df[['azimuth']].values)
+                azu_x_gt = np.degrees(truth.source[_source_id].polar_pos[:, 0])
+                azu_t = np.linspace(0, x_len / fs, azu_x_gt.shape[0])
+
+                ele_x_pd = np.degrees(df[['elevation']].values)
+                ele_x_gt = np.degrees(truth.source[_source_id].polar_pos[:, 1])
+                ele_t = np.linspace(0, x_len / fs, ele_x_gt.shape[0])
+
+                fig, ax = plt.subplots(3, figsize=(4, 6))
+                fig.tight_layout(pad=2.0)
+                # plt.plot(azu_t, azu_x_gt, 'ob', azu_t, azu_x_pd, 'xr')
+                ax[0].plot(t_axis, x_axis)
+                ax[0].set_title(f'Task {this_task}, recording {recording_id}, array: {this_array}')
+                ax[0].set(xlabel='Time, $t$, [s]', ylabel='Amplitude')
+
+                ax[1].plot(azu_t, azu_x_gt, '.b', label='groundtruth')
+                ax[1].plot(azu_t, azu_x_pd, 'xr', label='estimate')
+                ax[1].set(xlabel='Time, $t$, [s]', ylabel='Azimuth [deg]')
+                ax[1].legend()
+
+                ax[2].plot(ele_t, ele_x_gt, '.b', label='groundtruth')
+                ax[2].plot(ele_t, ele_x_pd, 'xr', label='estimate')
+                ax[2].set(xlabel='Time, $t$, [s]', ylabel='Elevation [deg]')
+                ax[2].legend()
+
+                fig.savefig(f'{filename}.png')
+                # with open(os.path.join(result_dir, 'metrics.txt'), 'w') as f:
+                #     f.write('azimuth MAE (dg): {:.02f} \n'.format(np.degrees(mae_azi)))
+                #     f.write('elevation MAE (dg): {:.02f} \n'.format(np.degrees(mae_ele)))
+                #     f.write('DOA error: {:.02f} \n'.format(doa_error))

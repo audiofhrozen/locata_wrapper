@@ -1,4 +1,3 @@
-dataset: locata
 data_dir: "F:\\LOCATA\\data\\dev"
 results_dir: "results\\dev"
 is_dev: true

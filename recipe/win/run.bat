@@ -6,7 +6,7 @@ call "cmd.bat"
 set VERBOSE=INFO
 set PROCESS=1
 
-set CONFIG_FILE=conf\default_win_locata_dev.yaml
+set CONFIG_FILE=conf\default_locata_dev.yaml
 
 rem Argument parser routine
 :loop
@@ -24,14 +24,11 @@ if not "%1"=="" (
 )
 rem end routine
 
-cd ..
-
-python locata_wrapper/bin/eval_loc.py -l %VERBOSE% ^
-                                      with %CONFIG_FILE% ^
-                                      processes=%PROCESS%
+python %ROOT_DIR%\locata_wrapper\bin\eval_loc.py -l %VERBOSE% ^
+                                                    with %CONFIG_FILE% ^
+                                                    processes=%PROCESS%
 
 
 :eof
-cd win
 echo run.bat Done.
 endlocal
