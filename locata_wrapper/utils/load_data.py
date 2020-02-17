@@ -12,6 +12,8 @@ import python_speech_features  # NOQA
 import soundfile
 import sys
 
+from locata_wrapper.utils.shared import wrapToPi
+
 
 def cart2pol(cart):
     """cart2pol
@@ -37,7 +39,7 @@ def cart2pol(cart):
     # elev
     pol[:, 1] = np.arccos(z / pol[:, 2])
     # azimuth
-    pol[:, 0] = np.unwrap(np.arctan2(y, x) - (np.pi / 2))
+    pol[:, 0] = wrapToPi(np.arctan2(y, x) - (np.pi / 2))
     return pol
 
 

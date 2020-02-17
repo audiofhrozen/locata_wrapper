@@ -10,21 +10,7 @@ from scipy.ndimage.filters import maximum_filter
 from scipy.signal import find_peaks
 import sys
 
-
-def wrapTo2Pi(_lambda):
-    """Wrap angle in radians to [0 pi]"""
-    positiveInput = _lambda > 0
-    _lambda = np.mod(_lambda, 2 * np.pi)
-    _idx = (_lambda == 0) * positiveInput
-    _lambda[_idx] = 2 * np.pi
-    return _lambda
-
-
-def wrapToPi(_lambda):
-    """Wrap angle in radians to [-pi pi]"""
-    q = (_lambda < -np.pi) + (np.pi < _lambda)
-    _lambda[q] = wrapTo2Pi(_lambda[q] + np.pi) - np.pi
-    return _lambda
+from locata_wrapper.utils.shared import wrapToPi
 
 
 def MUSIC(inputs, options, log=logging):
